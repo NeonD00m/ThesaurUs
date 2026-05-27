@@ -1,3 +1,4 @@
+import math
 import string
 import time
 
@@ -14,6 +15,15 @@ try:
 except ImportError:
     NUMPY_AVAILABLE = False
     NUMPY_VERSION = "Not Available"
+
+try:
+    import aiosqlite as sql
+
+    AIOSQLITE_AVAILABLE = True
+    AIOSQLITE_VERSION = sql.__version__
+except ImportError:
+    AIOSQLITE_AVAILABLE = False
+    AIOSQLITE_VERSION = "Not Available"
 
 try:
     import torch
@@ -72,11 +82,15 @@ def health_check():
                 "version": TRANSFORMERS_VERSION,
             },
             "torch": {"available": TORCH_AVAILABLE, "version": TORCH_VERSION},
+            "aiosqlite": {
+                "available": AIOSQLITE_AVAILABLE,
+                "version": AIOSQLITE_VERSION,
+            },
         },
     }
 
 
-def clean_tokens(raw_text):
+def clean_tokens(raw_text: str):
     words = raw_text.lower().split(" ")
     tokens = [
         word.strip(string.punctuation) for word in words
@@ -84,7 +98,7 @@ def clean_tokens(raw_text):
     return [t for t in tokens]  # clear empty tokens
 
 
-def get_frequencies(tokens):
+def get_frequencies(tokens: [str]):
     counts = {}
     for word in tokens:
         counts[word] = 1 + counts.get(word, 0)
@@ -119,3 +133,30 @@ def submit_text(text: str):
         "frequencies": frequencies,
         "overused_words": overused_words,
     }
+
+
+async def fetch_synonyms(word: str):
+    if not AIOSQLITE_AVAILABLE:
+        return None
+    async with sql.connect("thesaurus.db") as db:
+        async with db.execute(
+            "SELECT synonyms_csv FROM synonyms WHERE word = ?", (word,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            if row:
+                return row  # return the csv string
+            return None  # no word found in dictionary
+
+
+@app.get("/synonyms")
+async def get_synonyms(word: str):
+    """Endpoint to retrieve synonyms for a given word."""
+    clean_word = word.strip().lower()
+    row = await fetch_synonyms(clean_word)
+    if row and row[0]:
+        # Split CSV and clean up whitespace
+        synonyms = [s.strip() for s in row[0].split(",") if s.strip()]
+    else:
+        synonyms = []
+
+    return {"word": word, "synonyms": synonyms}
