@@ -34,8 +34,8 @@ class TestAPI(unittest.TestCase):
 
     @patch("app.main.fetch_synonyms", new_callable=AsyncMock)
     def test_synonyms_endpoint_found(self, mock_fetch):
-        # Mock fetch_synonyms to return a row tuple
-        mock_fetch.return_value = ("sluggish, idle, inactive",)
+        # Mock fetch_synonyms to return normalized synonym strings
+        mock_fetch.return_value = ["sluggish", "idle", "inactive"]
         
         response = self.client.get("/synonyms?word=lazy")
         self.assertEqual(response.status_code, 200)
@@ -47,8 +47,8 @@ class TestAPI(unittest.TestCase):
 
     @patch("app.main.fetch_synonyms", new_callable=AsyncMock)
     def test_synonyms_endpoint_not_found(self, mock_fetch):
-        # Mock fetch_synonyms to return None
-        mock_fetch.return_value = None
+        # Mock fetch_synonyms to return no matches
+        mock_fetch.return_value = []
         
         response = self.client.get("/synonyms?word=nonexistent")
         self.assertEqual(response.status_code, 200)

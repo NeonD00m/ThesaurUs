@@ -1,4 +1,5 @@
 import math
+import os
 import string
 import time
 
@@ -53,6 +54,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+DB_PATH = os.environ.get("THESAURUS_DB_PATH", "thesaurus.db")
 
 
 @app.get("/")
@@ -137,26 +140,32 @@ def submit_text(text: str):
 
 async def fetch_synonyms(word: str):
     if not AIOSQLITE_AVAILABLE:
-        return None
-    async with sql.connect("thesaurus.db") as db:
+        return []
+    async with sql.connect(DB_PATH) as db:
         async with db.execute(
-            "SELECT synonyms_csv FROM synonyms WHERE word = ?", (word,)
+            """
+            SELECT DISTINCT synonym.word
+            FROM words AS source
+            JOIN word_synset_map AS source_map
+                ON source_map.word_id = source.id
+            JOIN word_synset_map AS synonym_map
+                ON synonym_map.synset_id = source_map.synset_id
+            JOIN words AS synonym
+                ON synonym.id = synonym_map.word_id
+            WHERE source.word = ?
+                AND synonym.word != source.word
+            ORDER BY synonym.word;
+            """,
+            (word,),
         ) as cursor:
-            row = await cursor.fetchone()
-            if row:
-                return row  # return the csv string
-            return None  # no word found in dictionary
+            rows = await cursor.fetchall()
+            return [row[0] for row in rows]
 
 
 @app.get("/synonyms")
 async def get_synonyms(word: str):
     """Endpoint to retrieve synonyms for a given word."""
     clean_word = word.strip().lower()
-    row = await fetch_synonyms(clean_word)
-    if row and row[0]:
-        # Split CSV and clean up whitespace
-        synonyms = [s.strip() for s in row[0].split(",") if s.strip()]
-    else:
-        synonyms = []
+    synonyms = await fetch_synonyms(clean_word)
 
     return {"word": word, "synonyms": synonyms}
