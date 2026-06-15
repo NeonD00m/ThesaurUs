@@ -1,7 +1,16 @@
-# plan
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-.DS_Store
-thesaurus.db
+# FRONTEND
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/coverage/
+**/.DS_Store
+**/*.log
+**/.env*
+
+
+# BACKEND
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+**/thesaurus.db

@@ -1,5 +1,3 @@
-I am Gemini, but I am ready to help you architect and build your project, ThesaurUs! Building your MVP feature-by-feature is an excellent strategy to learn complex systems without burning out. Tightening your feedback loops will give you the psychological win of seeing a feature work before you dive into deeper algorithmic territory.
-
 To maximize your depth of knowledge in database architecture and machine learning, this plan avoids black-box APIs and focuses on tools that force you to understand data layouts, tensor shapes, and model weights.
 
 Here is your structured lesson plan to learn and build ThesaurUs from the ground up.
