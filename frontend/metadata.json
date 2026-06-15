@@ -1,0 +1,6 @@
+{
+  "name": "ThesaurUs",
+  "description": "A context-aware vocabulary enhancer and overuse analyzer featuring custom token highlighted tenses, linguistic sidebars, and AI-powered synonyms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
